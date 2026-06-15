@@ -15,15 +15,29 @@ PAIRS.forEach(p => {
 
 function getMarketData() { return marketData; }
 
-function httpsGet(path) {
+const REST_HOSTS = ['data-api.binance.vision', 'api.binance.com', 'api1.binance.com', 'api2.binance.com'];
+
+function httpsGet(path, hostIndex = 0) {
+  const hostname = REST_HOSTS[hostIndex % REST_HOSTS.length];
   return new Promise((resolve, reject) => {
-    const req = https.get({ hostname: 'api.binance.com', path }, res => {
+    const req = https.get({ hostname, path }, res => {
       let data = '';
       res.on('data', c => data += c);
-      res.on('end', () => { try { resolve(JSON.parse(data)); } catch(e) { reject(e); } });
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.code && parsed.msg) reject(new Error(`Binance error ${parsed.code}: ${parsed.msg}`));
+          else resolve(parsed);
+        } catch(e) { reject(e); }
+      });
     });
-    req.on('error', reject);
-    req.setTimeout(10000, () => { req.destroy(); reject(new Error('timeout')); });
+    req.on('error', e => {
+      if (hostIndex < REST_HOSTS.length - 1) {
+        console.log(`[Binance] REST ${hostname} failed, trying fallback...`);
+        httpsGet(path, hostIndex + 1).then(resolve).catch(reject);
+      } else reject(e);
+    });
+    req.setTimeout(15000, () => { req.destroy(); reject(new Error('timeout')); });
   });
 }
 
@@ -70,12 +84,23 @@ async function startBinanceStreams(broadcast) {
 
   // Subscribe to live kline streams
   const streams = PAIRS.map(p => `${p.toLowerCase()}@kline_${INTERVAL}`).join('/');
-  const wsUrl = `wss://stream.binance.com:9443/stream?streams=${streams}`;
+  const WS_URLS = [
+    `wss://data-stream.binance.vision/stream?streams=${streams}`,
+    `wss://stream.binance.com:443/stream?streams=${streams}`,
+    `wss://stream.binance.com:9443/stream?streams=${streams}`,
+  ];
+  let wsUrlIndex = 0;
+  const wsUrl = WS_URLS[0];
 
   function connect() {
-    const ws = new WebSocket(wsUrl);
+    const url = WS_URLS[wsUrlIndex % WS_URLS.length];
+    console.log(`[Binance] Connecting to ${url}`);
+    const ws = new WebSocket(url);
 
-    ws.on('open', () => console.log('[Binance] WebSocket connected'));
+    ws.on('open', () => {
+      wsUrlIndex = WS_URLS.indexOf(url); // lock to working URL
+      console.log('[Binance] WebSocket connected:', url);
+    });
 
     ws.on('message', raw => {
       try {
@@ -116,10 +141,14 @@ async function startBinanceStreams(broadcast) {
 
     ws.on('close', () => {
       console.log('[Binance] WS closed — reconnecting in 5s');
+      wsUrlIndex++;
       setTimeout(connect, 5000);
     });
 
-    ws.on('error', e => console.error('[Binance] WS error:', e.message));
+    ws.on('error', e => {
+      console.error(`[Binance] WS error (${url}):`, e.message);
+      wsUrlIndex++;
+    });
   }
 
   connect();
