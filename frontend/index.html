@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AlphaSignal — Trade com IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">Alpha<span class="logo-accent">Signal</span></span>
+        <span class="logo-badge">BETA</span>
+      </div>
+
+      <div class="account-bar">
+        <div class="account-field">
+          <label>Saldo (USDT)</label>
+          <input type="number" id="balance" value="1000" min="10" step="100" />
+        </div>
+        <div class="account-field">
+          <label>Risco por trade</label>
+          <select id="risk-pct">
+            <option value="1">1%</option>
+            <option value="2" selected>2%</option>
+            <option value="3">3%</option>
+          </select>
+        </div>
+        <div class="conn-dot" id="conn-dot" title="Desconectado"></div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+      <!-- PAIRS GRID -->
+      <section class="pairs-section">
+        <div class="section-title">Mercado em Tempo Real</div>
+        <div class="pairs-grid" id="pairs-grid">
+          <!-- Pair cards injected by JS -->
+        </div>
+      </section>
+
+      <!-- SIGNAL PANEL (shown when pair selected) -->
+      <section class="signal-section" id="signal-section" style="display:none">
+        <div class="signal-header">
+          <div>
+            <div class="signal-pair" id="sig-pair">—</div>
+            <div class="signal-ts" id="sig-ts">Aguardando dados...</div>
+          </div>
+          <button class="close-btn" id="close-signal">✕</button>
+        </div>
+
+        <!-- Score ring -->
+        <div class="score-block">
+          <div class="score-ring-wrap">
+            <svg class="score-ring" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="50"/>
+              <circle class="ring-fill" id="ring-fill" cx="60" cy="60" r="50" stroke-dasharray="0 314"/>
+            </svg>
+            <div class="score-center">
+              <div class="score-number" id="sig-score">—</div>
+              <div class="score-label" id="sig-direction">—</div>
+            </div>
+          </div>
+
+          <!-- Breakdown bars -->
+          <div class="breakdown">
+            <div class="break-item"><span>Tendência</span><div class="bar-wrap"><div class="bar" id="br-trend"></div></div><span class="bar-val" id="bv-trend">—</span></div>
+            <div class="break-item"><span>Volume</span><div class="bar-wrap"><div class="bar" id="br-volume"></div></div><span class="bar-val" id="bv-volume">—</span></div>
+            <div class="break-item"><span>Indicadores</span><div class="bar-wrap"><div class="bar" id="br-ind"></div></div><span class="bar-val" id="bv-ind">—</span></div>
+            <div class="break-item"><span>Notícias</span><div class="bar-wrap"><div class="bar" id="br-news"></div></div><span class="bar-val" id="bv-news">—</span></div>
+          </div>
+        </div>
+
+        <!-- Signal boxes -->
+        <div class="signal-boxes" id="signal-boxes">
+          <div class="sig-box entry">
+            <div class="sig-box-label">Entrada</div>
+            <div class="sig-box-value" id="sig-entry">—</div>
+          </div>
+          <div class="sig-box tp">
+            <div class="sig-box-label">Take Profit 🎯</div>
+            <div class="sig-box-value" id="sig-tp">—</div>
+            <div class="sig-box-pct" id="sig-tp-pct">—</div>
+          </div>
+          <div class="sig-box sl">
+            <div class="sig-box-label">Stop Loss 🛡️</div>
+            <div class="sig-box-value" id="sig-sl">—</div>
+            <div class="sig-box-pct" id="sig-sl-pct">—</div>
+          </div>
+        </div>
+
+        <!-- Risk/reward -->
+        <div class="rr-bar" id="rr-bar" style="display:none">
+          <span class="rr-label">Risco / Retorno</span>
+          <span class="rr-value" id="rr-value">1 : —</span>
+        </div>
+
+        <!-- Position sizing -->
+        <div class="position-block" id="position-block" style="display:none">
+          <div class="pos-title">Gestão de Posição</div>
+          <div class="pos-grid" id="pos-grid">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- Indicators row -->
+        <div class="indicators-row" id="indicators-row">
+          <div class="ind-chip" id="ind-rsi">RSI —</div>
+          <div class="ind-chip" id="ind-macd">MACD —</div>
+          <div class="ind-chip" id="ind-ema">EMA —</div>
+          <div class="ind-chip" id="ind-vol">Vol —</div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
